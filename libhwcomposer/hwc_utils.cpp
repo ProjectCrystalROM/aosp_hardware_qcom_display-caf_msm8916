@@ -429,6 +429,10 @@ void initContext(hwc_context_t *ctx)
     property_get("sys.hwc.gpu_perf_mode", value, "0");
 #ifdef QCOM_BSP
     ctx->mGPUHintInfo.mGpuPerfModeEnable = atoi(value)? true : false;
+#ifndef CAF_USES_EGL_GPU_PERF_HINT
+    // Optional CM EGL wrapper is not part of the AOSP display ABI.
+    ctx->mGPUHintInfo.mGpuPerfModeEnable = false;
+#endif
 
     ctx->mGPUHintInfo.mEGLDisplay = NULL;
     ctx->mGPUHintInfo.mEGLContext = NULL;
@@ -2505,7 +2509,7 @@ void setGPUHint(hwc_context_t* ctx, hwc_display_contents_1_t* list) {
     if(!gpuHint->mGpuPerfModeEnable || !ctx || !list)
         return;
 
-#ifdef QCOM_BSP
+#if defined(QCOM_BSP) && defined(CAF_USES_EGL_GPU_PERF_HINT)
     /* Set the GPU hint flag to high for MIXED/GPU composition only for
        first frame after MDP -> GPU/MIXED mode transition. Set the GPU
        hint to default if the previous composition is GPU or current GPU
